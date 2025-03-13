@@ -1,0 +1,75 @@
+import jetson.inference
+import jetson.utils
+import Jetson.GPIO as GPIO
+
+# 서보 모터 핀 및 초기화
+SERVO_PIN = 33
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(SERVO_PIN, GPIO.OUT)
+pwm = GPIO.PWM(SERVO_PIN, 50)
+pwm.start((1./18.)*100 + 2)  # 중앙값(0도)에 해당하는 듀티 사이클 시작
+
+current_zone = 0  # 현재 객체가 위치한 구역 초기화
+prev_center_x = 0  # 이전 프레임의 객체 중심 좌표 초기화
+
+def move_servo(pixel_distance, screen_width):
+    zones = 5  # 화면을 5개 구역으로 나눔
+    zone_width = screen_width / zones
+    target_zone = int(pixel_distance / zone_width) + zones // 2  # 중앙을 0으로 설정
+
+    global current_zone
+    if target_zone == current_zone:
+        print("Object within the same zone, no motor movement required.")
+        return
+
+    # 객체가 다른 구간으로 이동한 경우
+    current_zone = target_zone
+    angle = (target_zone - zones // 2) * (180 / zones)  # 구간 중앙에 맞추기
+    angle = max(min(angle, 90), -90)  # 각도 범위 제한
+
+    # 듀티 사이클 계산 및 설정
+    DC = (angle + 180) * (10.0 / 360.0) + 2.5
+    pwm.ChangeDutyCycle(DC)
+    print(f"Moving servo to angle: {angle} degrees to align with zone {target_zone}")
+
+# 네트워크 초기화 (TAO FaceDetect 모델을 사용)
+net = jetson.inference.detectNet("facenet-120", threshold=0.5)
+camera = jetson.utils.videoSource("csi://0")
+
+while True:
+    img = camera.Capture()
+    detections = net.Detect(img)
+    
+    # 가장 큰 객체 찾기
+    largest_area = 0
+    largest_center_x = img.width / 2  # 객체가 없는 경우 이미지 중앙으로 설정
+    for detection in detections:
+        if detection.ClassID == 0: # 얼굴 클래스 ID 사용
+            print('Detection found')
+            area = detection.Width * detection.Height
+            if area > largest_area:
+                largest_area = area
+                largest_center_x = detection.Center[0]
+        else:
+            largest_center_x = img.width / 2
+            print('No detection')
+
+    # 객체 추적
+    if largest_area > 0:
+        # 화면 중앙과의 거리 계산
+        screen_center_x = img.width / 2
+        distance_from_center = largest_center_x - screen_center_x
+
+        # 상태 메시지 출력
+        print(f"Distance from Center: {distance_from_center}")
+
+        # 모터 제어 호출 부분
+        move_servo(distance_from_center, img.width)
+        
+        # 이전 프레임의 객체 중심 좌표 업데이트
+        prev_center_x = largest_center_x
+    else:
+        # 이전 프레임의 객체 중심 좌표를 사용하여 모터 제어
+        distance_from_center = prev_center_x - (img.width / 2)
+        move_servo(distance_from_center, img.width)

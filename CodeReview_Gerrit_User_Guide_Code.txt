@@ -1,0 +1,82 @@
+1. 개요
+   3) SSAFY 제공 Gerrit 소개
+      - gerrit 관련 서비스의 구동 상태 명령어
+        sudo systemctl status httpd
+        sudo systemctl status gerrit
+
+2. 설정 절차
+   1) admin 패스워드 설정
+      sudo htpasswd /opt/gerrit/etc/passwords admin
+
+   2) gerrit 로그인/로그아웃
+      https://EC2이름.p.ssafy.io:8989/
+
+   5) gitlab 동기화 설정
+      ②replication 설정(gerrit)
+--------------------------------------------------------------------------
+sudo vi /opt/gerrit/etc/replication.config
+
+[gerrit]
+        autoReload = true
+        replicateOnStartup = true
+        replicatePermissions = false
+[replication]
+        lockErrorMaxRetries = 5
+        maxRetries = 5
+[remote "gerrit repository명"]
+        url = gitlab project URL 예) https://lab.ssafy.com/프로젝트명
+        push = +refs/heads/*:refs/heads/*
+        push = +refs/tags/*:refs/tags/*
+        mirror = true
+        projects = gitlab project명
+
+--------------------------------------------------------------------------
+sudo vi /opt/gerrit/etc/secure.config
+
+[auth] registerEmailPrivateKey 삭제해 주세요.
+
+[remote "gerrit repository명"]
+        username = gitlab project의 access token name
+        password = gitlab project의 access token
+
+--------------------------------------------------------------------------
+sudo systemctl restart gerrit
+
+   6) 로컬 개발 환경 설정
+       git remote -v
+       git remote set-url origin "https://<gerrit username>@<EC2 주소>:8989/a/<project명>
+       git push origin <branch명>
+
+
+3. 코드 리뷰 절차
+   1) 리뷰 오픈
+      git push <remote명> <branch명>
+    
+      ① git command (cmd, git bash 등)
+         git push <remote명> HEAD:refs/for/<branch명>
+
+
+※ 참고
+   1) httpd / gerrit 데몬 재구동 명령어
+     $ sudo systemctl start|stop gerrit   # 게릿 데몬 구동 명령어
+     $ sudo systemctl status gerrit       # 게릿 데몬 상태 확인 명령어
+     $ ps -ef | grep gerrit               # 게릿 프로세스 확인 명령어
+ 
+     $ sudo systemctl start|stop httpd    # 아파치 데몬 구동 명령어
+     $ sudo systemctl status httpd        # 아파치 데몬 상태 확인 명령어
+     $ ps -ef | grep httpd                # 아파치 프로세스 확인 명령어
+
+    3) gerrit 백업 및 복구
+       sudo systemctl stop gerrit
+       cd /opt && sudo tar -czvf ~/gerrit-backup.tar.gz gerrit
+       sudo systemctl start gerrit
+
+       sudo systemctl stop gerrit
+       sudo tar -xzvf gerrit-backup.tar.gz -C /opt/
+       sudo systemctl start gerrit
+
+     6) Change-Id를 활용한 patchset 관리
+         cd /c/ojt/greenfingers *로컬 프로젝트 홈 폴더로 이동
+         mkdir -p `git rev-parse --git-dir`/hooks/ && curl -Lo `git rev-parse --git-dir`/hooks/commit-msg https://**도메인주소**:8989/tools/hooks/commit-msg && chmod +x `git rev-parse --git-dir`/hooks/commit-msg
+         git push origin HEAD:refs/for/develop
+         git commit --amend

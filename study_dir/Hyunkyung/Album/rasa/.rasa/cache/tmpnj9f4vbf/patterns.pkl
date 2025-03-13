@@ -1,0 +1,42 @@
+[
+  {
+    "name": "location",
+    "pattern": "[가-힣]+로"
+  },
+  {
+    "name": "location",
+    "pattern": "[가-힣]+에서?"
+  },
+  {
+    "name": "location",
+    "pattern": "[가-힣]+의"
+  },
+  {
+    "name": "time",
+    "pattern": "\\d{4}년"
+  },
+  {
+    "name": "time",
+    "pattern": "\\d{4}년 \\d{1,2}월"
+  },
+  {
+    "name": "time",
+    "pattern": "\\d{4}년 \\d{1,2}월 \\d{1,2}일"
+  },
+  {
+    "name": "time",
+    "pattern": "작년"
+  },
+  {
+    "name": "time",
+    "pattern": "재작년"
+  },
+  {
+    "name": "time",
+    "pattern": "지난 달"
+  },
+  {
+    "name": "time",
+    "pattern": "지난 여름"
+  }
+]

@@ -1,0 +1,31 @@
+version: "3.1"
+
+nlu:
+- intent: request_photo
+  examples: |
+    - [작년에](time) [부산](location)에서 찍은 사진 보여줘
+    - [재작년](time) [서울](location)에서 찍은 사진을 보여주세요
+    - [2018년 5월](time)에 [강릉](location)에서 찍은 사진 찾아줄래
+    - [지난 여름에](time) [제주도](location)에서 찍은 사진을 보여줘
+
+- intent: activation
+  examples: |
+    - 나가
+    - 종료
+    - 끝내자
+
+- regex: time
+  examples: |
+    - \d{4}년 \d{1,2}월 \d{1,2}일
+    - \d{4}년 \d{1,2}월
+    - \d{4}년
+    - 작년
+    - 재작년
+    - 지난 여름
+    - 지난 달
+
+- regex: location
+  examples: |
+    - [가-힣]+에서
+    - [가-힣]+로
+    - [가-힣]+의

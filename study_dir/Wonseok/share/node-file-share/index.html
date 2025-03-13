@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>File Share</title>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const socket = io();
+
+        socket.on('connect', () => {
+            socket.emit('request-files');
+        });
+
+        socket.on('file-list', (response) => {
+            if (response.success) {
+                const filesContainer = document.getElementById('files');
+                filesContainer.innerHTML = '';
+                response.files.forEach(file => {
+                    const fileLink = document.createElement('a');
+                    fileLink.href = '#';
+                    fileLink.textContent = file;
+                    fileLink.onclick = () => {
+                        socket.emit('request-file', file);
+                        return false;
+                    };
+                    filesContainer.appendChild(fileLink);
+                    filesContainer.appendChild(document.createElement('br'));
+                });
+            } else {
+                console.log('Error: ', response.msg);
+            }
+        });
+
+        socket.on('file-data', (response) => {
+            if (response.success) {
+                const blob = new Blob([response.data]);
+                const downloadUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = response.fileName;
+                a.click();
+            } else {
+                console.log('Error: ', response.msg);
+            }
+        });
+    });
+</script>
+</head>
+<body>
+<h1>File Share</h1>
+<div id="files"></div>
+</body>
+</html>

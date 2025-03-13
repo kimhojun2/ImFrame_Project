@@ -1,0 +1,52 @@
+[
+    {
+        "componentId": "main",
+        "capabilityId": "firmwareUpdate",
+        "name": "updateFirmware"
+    },
+    {
+        "componentId": "main",
+        "capabilityId": "colorControl",
+        "name": "setSaturation"
+    },
+    {
+        "componentId": "main",
+        "capabilityId": "switchLevel",
+        "name": "setLevel"
+    },
+    {
+        "componentId": "main",
+        "capabilityId": "colorControl",
+        "name": "setHue"
+    },
+    {
+        "componentId": "main",
+        "capabilityId": "synthetic.lightingEffectFade",
+        "name": "setFade"
+    },
+    {
+        "componentId": "main",
+        "capabilityId": "colorControl",
+        "name": "setColor"
+    },
+    {
+        "componentId": "main",
+        "capabilityId": "refresh",
+        "name": "refresh"
+    },
+    {
+        "componentId": "main",
+        "capabilityId": "switch",
+        "name": "on"
+    },
+    {
+        "componentId": "main",
+        "capabilityId": "switch",
+        "name": "off"
+    },
+    {
+        "componentId": "main",
+        "capabilityId": "firmwareUpdate",
+        "name": "checkForFirmwareUpdate"
+    }
+]

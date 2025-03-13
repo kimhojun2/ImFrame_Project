@@ -1,0 +1,44 @@
+import firebase_admin
+from firebase_admin import credentials, messaging
+import requests
+import os
+
+# Firebase 프로젝트 인증 정보 다운로드
+cred = credentials.Certificate("path/to/serviceAccountKey.json")
+firebase_admin.initialize_app(cred)
+
+# FCM 토픽 설정
+topic = "image_upload"
+
+def download_image(image_url, local_path):
+    try:
+        response = requests.get(image_url)
+        if response.status_code == 200:
+            with open(local_path, 'wb') as f:
+                f.write(response.content)
+            print(f"이미지 다운로드 완료: {local_path}")
+        else:
+            print("이미지를 다운로드하는 데 문제가 발생했습니다.")
+    except Exception as e:
+        print(f"이미지 다운로드 중 오류 발생: {e}")
+
+def handle_message(message):
+    if 'data' in message:
+        data = message['data']
+        if 'imageUrl' in data:
+            image_url = data['imageUrl']
+            # 로컬에 저장할 경로 및 파일명
+            local_path = "downloaded_image.jpg"
+            # 이미지 다운로드
+            download_image(image_url, local_path)
+
+def listen_for_messages():
+    # FCM 메시지 수신 대기
+    response = messaging.subscribe_to_topic(topic)
+    while True:
+        messages = messaging.receive_message(response)
+        for message in messages:
+            handle_message(message)
+
+if __name__ == "__main__":
+    listen_for_messages()
